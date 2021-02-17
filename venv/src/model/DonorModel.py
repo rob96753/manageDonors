@@ -1,17 +1,12 @@
 import json
 import os
-import CollectionModel
+import Model
 
-class DonorModel(CollectionModel):
+class DonorModel(Model.Model):
 
-    def __init__(self):
-        donorDataLocation = self.utilities.getDonorDataLocation()
-        if os.path.exists(donorDataLocation):
-            with open(donorDataLocation, "r+") as fp:
-                self.donors = json.load(fp)
-        else:
-            self.logger.log(self.logger.ERROR, f'Donor Data Location doesn''t exist at location: {donorDataLocation} ')
-            
+    def __init__(self, logger, utilities):
+
+       super().__init__(logger, utilities)
 
     def getDonors(self):
-        return self.donors
+        return self._getData()

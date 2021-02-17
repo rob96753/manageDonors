@@ -10,7 +10,7 @@ TEST_CONFIG_PATH = '../config/config-test.json'
 TEST_DONATION_DATA_LOCATION_FROM_CONFIG = '/venv/data/db.json'
 NON_EXISTENT_KEY = 'NOKEY'
 SYS_ARGV = 'sys.argv'
-CONFIG_FILE_PATH = ''
+CONFIG_FILE_PATH = '../config/manageDonors.json'
 
 cli_values = ["pytest", f'{CommandLine.CONFIG}', TEST_CONFIG_PATH,
               f'{CommandLine.DONORS}', TEST_DB_FILE_PATH]

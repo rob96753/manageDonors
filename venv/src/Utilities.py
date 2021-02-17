@@ -1,7 +1,7 @@
 import CommandLine
 import json
 
-
+LOGGER_KEY = "logger"
 
 class Utilities:
     def __init__(self):
@@ -10,10 +10,9 @@ class Utilities:
 
     def getDonorDataLocation(self):
         """ Get the Location of the Donor Database File, Check Config File First Override """
-        if  CommandLine.DONOR_DATA_LOCATION_KEY in self.configuration:
+        if CommandLine.DONOR_DATA_LOCATION_KEY in self.configuration:
             return self.getConfigurationValue(CommandLine.DONOR_DATA_LOCATION_KEY)
         else:
-            print('Getting command line argument values')
             return self.getCommandLineArgument(CommandLine.DONOR_DATA_LOCATION_KEY)
 
     def getConfigFilePath(self):
