@@ -52,7 +52,7 @@ class TestClass:
                 "surname": "MORROW",
                 "ssn": "921-02-1700",
                 "issn": "921021700",
-                "donor_id": "BEESM1998010115006",
+                "donor_id": "MORRJ1998010115006",
                 "blood_type": "O POSITIVE",
                 "nationality": "United States of America",
                 "home_donation_site": "WAIANAE",
@@ -64,9 +64,6 @@ class TestClass:
                 "donor_original_index": 610
             }
         }
-
-        #mockRecord[list(mockRecord.keys())[0]]["last_donation"] = datetime.strftime(datetime.now(), '%d %b %Y')
-
         self.model.append(mockRecord)
 
 
@@ -103,10 +100,42 @@ class TestClass:
         with pytest.raises(Model.ModelIndexError):
             self.model.createIndex(INDEX_NAME, INDEX_KEY_NAME)
 
+    def test_get_items_filtered(self, loadData):
+        """Test Get Items from Model Using Filter"""
+        limit = 10
+        filter = lambda x: ((datetime.now() - datetime.strptime(x['last_donation'], '%d %b %Y')).days > 56) and (x['gender'].upper() == 'F') and (x['blood_type'].upper().startswith('O POS'))
+        results = self.model.getItems(filter, limit)
+        assert(len(results) == limit)
+
+
+    def test_get_items_filtered_from_index(self, loadData):
+        """Test Get Items Index from Model Using Filter"""
+        limit = 300
+        filter = lambda x: (datetime.now() - datetime.strptime(x, '%d %b %Y')).days > 56
+        results = self.model.getItemsIndex(filter, INDEX_NAME, limit)
+        assert(len(results) == limit)
+
+    def test_create_index_non_callable_filter(self, loadData):
+        """Test Passing Filter That's Not Callable"""
+        with pytest.raises(Model.ModelIndexError):
+            self.model.createIndex(INDEX_NAME, INDEX_KEY_NAME, "not callable")
+
+    def test_get_items_index_non_callable_filter(self, loadData):
+        """Test Passing Filter That's Not Callable to Get Items Index"""
+        limit = 10
+        filter = "not callable "
+        with pytest.raises(Model.ModelIndexError):
+            results = self.model.getItemsIndex(filter, INDEX_NAME, limit)
+
+    def test_get_items_non_callable_filter(self, loadData):
+        """Test Passing Filter That's Not Callable to Get Items"""
+        limit = 10
+        filter = "not callable "
+        with pytest.raises(Model.ModelIndexError):
+            results = self.model.getItems(filter, limit)
 
 
 
-    #def test_get_items_filtered(self, loadData):
 
 
 

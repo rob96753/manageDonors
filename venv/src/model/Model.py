@@ -6,6 +6,7 @@ class ModelIndexError(Exception):
     pass
 
 class Model:
+    """"""
     dataLoaded = False
     _indexes = {}
     modelName = 'default'
@@ -16,6 +17,7 @@ class Model:
         self.modelName = modelName
 
     def load(self, path):
+        """"""
         if os.path.exists(path):
             with open(path, "r+") as fp:
                 self._data = json.load(fp)
@@ -24,6 +26,7 @@ class Model:
             self.logger.log(self.logger.ERROR, f'Data Location doesn''t exist at location: {donorDataLocation} ')
 
     def append(self, record):
+        """"""
         recordIds = list(record.keys())
         notAppended = 0
         recordCount = len(recordIds)
@@ -35,15 +38,18 @@ class Model:
         return f'{recordCount - notAppended} of {recordCount} Appended to {self.modelName}'
 
     def upsert(self, record):
+        """"""
         recordIds = record.keys()
         for recordId in recordIds:
             self._data[recordId] = record[recordId]
 
 
     def _getData(self):
+        """"""
         return self._data
 
     def getIds(self):
+        """"""
         return self._data.keys()
 
     def indexExists(self, indexName):
@@ -56,6 +62,9 @@ class Model:
         counter = 0
         if self.indexExists(indexName):
             raise ModelIndexError(f"Create Index: {indexName} Already Exists, Use rebuildIndex to Update Index")
+
+        if not ((filter is None) or callable(filter)):
+            raise ModelIndexError(f"Create Index: {filter} Must be 'None' or a Callable Function")
         self._indexes[indexName] = {}
         for counter, key in enumerate(self.getIds()):
             item = self._data[key]
@@ -78,6 +87,44 @@ class Model:
         if not self.indexExists(indexName):
             raise ModelIndexError(f"Get Index: {indexName} Doesn't Exist")
         return self._indexes[indexName]
+
+
+    def getItemsIndex(self, filter, indexName, limit):
+        """Search an Index for Matching Values, Up to Count"""
+        if not callable(filter):
+            raise ModelIndexError(f"Get Items Index: {filter} Must be a Callable Function")
+
+        items = []
+        if not self.indexExists(indexName):
+            raise ModelIndexError(f"Get Items Index: {indexName} Doesn't Exist")
+        for key in list(self._indexes[indexName].keys()):
+            if filter(key):
+                ids = self._indexes[indexName][key][:limit - len(items)]
+                for id in ids:
+                    item = self._data[id]
+                    item['_id'] = id
+                    items.append(item)
+            if len(items) >= limit:
+                break
+        return items
+
+    def getItems(self, filter, limit):
+        """Search an data for Matching Values, Up to Count"""
+
+        if not callable(filter):
+            raise ModelIndexError(f"Get Items Index: {filter} Must be a Callable Function")
+
+        items = []
+        for count, key in enumerate(list(self._data.keys())):
+            if count >= limit:
+                break
+            item = self._data[key]
+            item['_id'] = key
+            if filter(item):
+                items.append(item)
+        return items
+
+
 
 
 

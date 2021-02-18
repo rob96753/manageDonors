@@ -1,0 +1,11 @@
+# created by virtualenv automatically
+bin
+lib
+site-packages
+src/__pycache__/*
+src/model/__pycache__/*
+src/controller/.vscode/settings.json
+test/__pycache__/*
+manage_donors.log
+
+
