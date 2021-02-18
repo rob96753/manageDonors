@@ -1,5 +1,7 @@
 import pytest
 import sys
+from datetime import datetime
+import uuid
 
 sys.path.insert(1, '../src')
 import Utilities
@@ -8,16 +10,23 @@ import CommandLine
 sys.path.append('../src/model')
 
 import DonorModel
+import Model
 
 TEST_DB_FILE_PATH = '../data/db.json'
 TEST_CONFIG_PATH = '../config/config.json'
 SYS_ARGV = 'sys.argv'
+
+INDEX_NAME = "last_donation"
+INDEX_KEY_NAME = "last_donation"
+INDEX_UNKNOWN_NAME = "foo"
+FILTERED_INDEX_NAME = "filtered_index"
 
 cli_values = ["pytest", CommandLine.CONFIG, TEST_CONFIG_PATH,
               CommandLine.DONORS, TEST_DB_FILE_PATH]
 
 class TestClass:
     utilities = None
+    model = None
 
     @pytest.fixture(autouse=False)
     def setup(self, monkeypatch):
@@ -27,9 +36,80 @@ class TestClass:
         self.utilities.parseCommandLine()
         self.donorDataLocation = self.utilities.getDonorDataLocation()
 
+    @pytest.fixture(autouse=False)
+    def loadData(self, monkeypatch, setup):
+        self.model = DonorModel.DonorModel(None, self.utilities)
+        self.model.load(self.utilities.getDonorDataLocation())
+
+    @pytest.fixture(autouse=False)
+    def addMockRecord(self, monkeypatch, loadData):
+        """Create a Mock Record With a Date of Today for last_donation"""
+        """This will be used for testing the filter function of create index"""
+        mockRecord = {
+            "36e5ad04-9067-42bd-8ad2-7923eb8102fd": {
+                "first_name": "JUDIE",
+                "middle_name": "J",
+                "surname": "MORROW",
+                "ssn": "921-02-1700",
+                "issn": "921021700",
+                "donor_id": "BEESM1998010115006",
+                "blood_type": "O POSITIVE",
+                "nationality": "United States of America",
+                "home_donation_site": "WAIANAE",
+                "ltowb": "n",
+                "gender": "F",
+                "race": "CAUCASIAN",
+                "dob": "01 JAN 1988",
+                "last_donation": f"{datetime.strftime(datetime.now(), '%d %b %Y')}",
+                "donor_original_index": 610
+            }
+        }
+
+        #mockRecord[list(mockRecord.keys())[0]]["last_donation"] = datetime.strftime(datetime.now(), '%d %b %Y')
+
+        self.model.append(mockRecord)
+
+
     def test_model_load(self, setup):
+        """Test Loading the Donor Content and Verify It's a Dictionary Using getDonors"""
         model = DonorModel.DonorModel(None, self.utilities)
-        print(self.utilities.getDonorDataLocation())
         model.load(self.utilities.getDonorDataLocation())
         assert(isinstance(model.getDonors(), dict))
+
+    def test_model_get_ids(self, loadData):
+        """Test the getIds Method to Verify it Returns All Ids from Data"""
+        ids = self.model.getIds()
+        assert(len(ids) >= 610)
+
+    def test_get_index_exception(self, loadData):
+        """Test the Get Index for Index that Doesn't Exist"""
+        with pytest.raises(Model.ModelIndexError):
+            self.model.getIndex(INDEX_UNKNOWN_NAME)
+
+    def test_model_create_index(self, loadData):
+        """Test the Indexes Should Map Keys to Ids with No Filter"""
+        count = self.model.createIndex(INDEX_NAME, INDEX_KEY_NAME)
+        assert(self.model.getIndex(INDEX_NAME))
+        assert(count + 1 == len(list(self.model.getIds())))
+
+    def test_model_create_index_filtered(self, addMockRecord):
+        """Test the Indexes Should Map Keys to Ids with No Filter"""
+        filter = lambda x: (datetime.now() - datetime.strptime(x, '%d %b %Y')).days < 2
+        count = self.model.createIndex(FILTERED_INDEX_NAME, INDEX_KEY_NAME, filter)
+        assert(len(list(self.model.getIndex(FILTERED_INDEX_NAME).keys())) == 1)
+
+    def test_model_create_index_exception(self, loadData):
+        """Test the Indexes Should Map Keys to Ids"""
+        with pytest.raises(Model.ModelIndexError):
+            self.model.createIndex(INDEX_NAME, INDEX_KEY_NAME)
+
+
+
+
+    #def test_get_items_filtered(self, loadData):
+
+
+
+
+
 
