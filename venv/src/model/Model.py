@@ -115,8 +115,8 @@ class Model:
             raise ModelIndexError(f"Get Items Index: {filter} Must be a Callable Function")
 
         items = []
-        for count, key in enumerate(list(self._data.keys())):
-            if count >= limit:
+        for key in list(self._data.keys()):
+            if len(items) >= limit:
                 break
             item = self._data[key]
             item['_id'] = key
