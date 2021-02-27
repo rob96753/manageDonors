@@ -72,17 +72,17 @@ logging_config = dict(
 )
 
 class TestClass:
-    utilities = None
 
     @pytest.fixture(autouse=False)
     def setup(self, monkeypatch):
         """Set the collection of command line arguments"""
-        self.utilities = Utilities.Utilities()
+        utilities = Utilities.Utilities()
         monkeypatch.setattr(SYS_ARGV, cli_config_values)
-        self.utilities.parseCommandLine()
+        utilities.parseCommandLine()
+        return(utilities)
 
     def test_logger_config(self, setup):
-        self.utilities.parseConfiguration(self.utilities.getConfigFilePath())
+        setup.parseConfiguration(setup.getConfigFilePath())
         #config = self.utilities.getConfigurationValue(Utilities.LOGGER_KEY)
         log = Logging.Logger('manage_donors', logging_config)
         logger = log.getLogger()

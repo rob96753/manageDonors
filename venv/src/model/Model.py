@@ -17,7 +17,7 @@ class Model:
         self.modelName = modelName
 
     def load(self, path):
-        """"""
+        """Reads the contents of a JASON file into a Dictionary Object."""
         if os.path.exists(path):
             with open(path, "r+") as fp:
                 self._data = json.load(fp)
@@ -55,6 +55,25 @@ class Model:
     def indexExists(self, indexName):
         """checks that the index exists"""
         return indexName in self._indexes
+
+
+    def createIndexCompositeKey(self, indexName, compositeKey, filter=None):
+        if self.indexExists(indexName):
+            raise ModelIndexError(f"Create Index Composite Key: {indexName} Already Exists, Use rebuildIndex to Update Index")
+
+        if not ((filter is None) or callable(filter)):
+            raise ModelIndexError(f"Create Index Composite Key: {filter} Must be 'None' or a Callable Function")
+
+        if not callable(compositeKey):
+            raise ModelIndexError(f"Create Index Composite Key: {compositeKey} Must be a Callable Function")
+
+        self._indexes[indexName] = {}
+        for counter, key in enumerate(self.getIds()):
+            item = self._data[key]
+            if (filter is None) or (filter(item)):
+                self._indexes[indexName][compositeKey(item)] = [key]
+
+        return len(self._indexes[indexName])
 
 
     def createIndex(self, indexName, keyName, filter=None):
@@ -97,8 +116,18 @@ class Model:
         items = []
         if not self.indexExists(indexName):
             raise ModelIndexError(f"Get Items Index: {indexName} Doesn't Exist")
+        """
+        The list of keys could be collected with list comprehension, but it 
+        would process all the keys, regardless of the limit; then the limit
+        would have to be applied later. This will actually stop the processing 
+        when the limit is reached.
+        """
+
         for key in list(self._indexes[indexName].keys()):
-            if filter(key):
+            if filter(key.upper()):
+                """only grab enough ids to fullfill the request for number of
+                    item requested, then populate the items list with records
+                    of donors"""
                 ids = self._indexes[indexName][key][:limit - len(items)]
                 for id in ids:
                     item = self._data[id]

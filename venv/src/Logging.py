@@ -5,7 +5,12 @@ FORMAT_KEY = 'format'
 DATE_FORMAT_KEY = 'dateFormat'
 DISABLE_EXISTING_LOGGERS_KEY = 'disable_existing_loggers'
 
-
+DEBUG = logging.DEBUG
+WARN = logging.WARN
+WARNING = logging.WARNING
+INFO = logging.INFO
+ERROR = logging.ERROR
+CRITICAL = logging.CRITICAL
 
 
 class Logger():

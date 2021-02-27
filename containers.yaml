@@ -1,0 +1,16 @@
+#docker compose file
+version: '3'
+services:
+  dynamodb:
+    image: amazon/dynamodb-local
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /data"
+    ports:
+      - 8000:8000
+    volumes:
+      - dynamo-data:/data
+    container_name: dynamodb
+#you need to execute the following command prior to running docker-compose:
+#    docker volume create --name=dynamo-data
+volumes:
+  dynamo-data:
+    external: true
